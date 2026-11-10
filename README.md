@@ -90,3 +90,44 @@ Evidence links marked `APPROVED` remain `verified_fact=false` and
 `human_approved=false` in the bridge response. A true claim needs separate
 external verification. Next: canonical SKI schema mapping, provenance
 attestation, live registry loading, and LLM_CHA runtime integration.
+
+
+## v0.4 — SKI v0.5 dataset subset
+
+Source specification: HASKI_DOC branch `v0.5`,
+`docs/SKI_v0.5_Semantic_Dataset_Roundtrip_Interchange_ja.md`, plus
+`docs/SKI_v0.5_Dialogue_and_Learning_Datasets_ja.md`.
+
+`ski/dataset_v05.py` adds a **separate** natural-language SKI message-array
+API without changing existing experimental `ski/message.py` evidence envelopes.
+
+- `new_message(...)`: `ski-natural-language-v0.5` messages with UTF-8 SHA-256.
+- `validate_dataset(messages)`: bounded nonempty array, unique message IDs and direction.
+- `make_ack(messages, receiver_llm)`/`verify_ack(...)`: separate delivery receipt
+  with canonical JSON dataset hash; **not** an interpretation/approval receipt.
+- `validate_replies(dataset_a, dataset_b)`: B→A direction, parent SD,
+  response_to_message_id and source SD correlation. Multiple replies opt-in.
+- `validate_metadata(metadata, messages)`: DIALOGUE turn references or
+  LEARNING question/answer pairs; out-of-band `dataset_type` (not inserted
+  into a v0.5 message), with incoming learning approval never promoted.
+- Embeddings and model vectors are not transmitted.
+
+### Windows regression
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/ski-v05-datasets-v0.4
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_llm_tmp_integration_v03.py --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+**Scope boundaries:** This is a conservative **subset** of the SKI v0.5
+proposal, not complete normative conformance. It does not implement actual
+LLM_CHA runtime hooks, authenticated network delivery, persistent replicas,
+replay-resistant sender authentication, full lifecycle/retraction,
+semantic quality verification or training. Out-of-order dialogue references
+are not handled in this subset. Source SHA-256 prevents accidental corruption,
+not maliciously recomputed hashes. The user's local validation is required
+before reporting test success.
