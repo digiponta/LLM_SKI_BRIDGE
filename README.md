@@ -131,3 +131,39 @@ semantic quality verification or training. Out-of-order dialogue references
 are not handled in this subset. Source SHA-256 prevents accidental corruption,
 not maliciously recomputed hashes. The user's local validation is required
 before reporting test success.
+
+
+## v0.5 — LLM_CHA-facing SKI sidecar (opt-in, no model inference)
+
+`adapters/llm_cha_client_v05.py` provides `CHAClient.exchange(text, source_sd=..., target_sd=...)`.
+It converts the input to SKI v0.5 Dataset A, generates and verifies an independent
+ACK, calls `LLM_TMPAdapter.handle()` through the existing experimental evidence
+envelope, validates the correlated Dataset B, and returns **structured data**.
+No model-generated answer, human approval, registration, or learning is performed.
+
+This is deliberately **not** yet a change to LLM_CHA's `chat.py` or
+`chat_gui.py`; LLM_CHA v0.14.0 has a substantial existing runtime and should
+not be patched or have truth gates bypassed without a dedicated integration
+test. Existing LLM_CHA logic can consume the returned structured result at a
+subsequent stage. Evidence status strings are descriptions of *retrieval*,
+not proof of factual truth.
+
+Run on Windows from this repository:
+
+```powershell
+git fetch origin
+git switch feature/llm-cha-client-v0.5
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_cha_handoff_v05.py --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+python verify_llm_tmp_integration_v03.py --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+python verify_ski_v05_v04.py
+```
+
+The handoff demonstration invokes the **real local LLM_TMP RelationGraph class**
+but uses **synthetic ephemeral graph data**; it never invokes a trained LLM,
+loads existing semantic memory, or changes model/data files.
+
+**Upcoming v0.6:** integrate with a reviewed LLM_CHA runtime extension point,
+map actual local SD IDs, add provenance/authentication and replay protection,
+and measure end-to-end semantic quality independently of transport validity.
