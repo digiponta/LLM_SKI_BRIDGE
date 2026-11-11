@@ -392,3 +392,64 @@ For real local files, use the actual `SDRegistry` frozen JSON format;
 do not use a benchmark report or the v0.8 synthetic relation
 snapshot as native input. An explicitly approved predicate mapping
 is still a hypothesis to evaluate, not proof of factual truth.
+
+
+## v0.10 — read-only audit of native LLM_TMP SD Registry
+
+`adapters/native_registry_audit_v010.py` inspects native frozen
+`intent_sd_context_v03.SDRegistry` JSON supplied explicitly as a local
+file. Its companion `audit_native_registry_v010.py` prints a JSON report
+**to stdout only**; neither input nor any Registry/LLM state is changed.
+
+The audit records node counts by SD kind; relations grouped by
+`validation_state` and predicate SD ID; Evidence ID coverage and
+repeat usage; exact mapping-eligible counts; and exclusions for
+unallowlisted predicates and unapproved states. No source expressions,
+display names, conversation transcripts, or Evidence text are exported.
+
+Mapping remains **default deny**: `--supported-by-predicate` must explicitly
+identify each existing predicate SD ID to treat as `SUPPORTED_BY`.
+The validator uses LLM_TMP's real local `SDRegistry` class for topology
+validation. The audit then invokes the v0.9 conversion separately and
+compares both source SHA-256 and eligible/exported relation counts.
+
+### Windows verification
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/native-registry-audit-v0.10
+git pull --ff-only
+python -m unittest discover -s tests -v
+
+# Audit a synthetic native registry, without allowing evidence mapping
+python audit_native_registry_v010.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP `
+  --native examples/llm_tmp_native_registry_v09.json
+
+# Audit explicit synthetic SUPPORT mapping
+python audit_native_registry_v010.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP `
+  --native examples/llm_tmp_native_registry_v09.json `
+  --supported-by-predicate support-pred
+```
+
+Expected regression suite: **98 tests** (previous 86 + 12 new), subject
+to actual Windows execution. The demo has 3 topic/concept/entity SD
+nodes, 2 predicate SD nodes and 2 relation SD nodes (7 total). The
+default audit reports **zero** eligible mappings; the explicitly mapped
+audit reports **one** eligible mapping. The files are still synthetic.
+
+To examine an **actual local frozen Intent SD registry**, replace
+`--native` with its existing absolute JSON path. Avoid assuming a
+benchmark results JSON or annotations packet is a compatible SDRegistry
+snapshot. If the requested file is not in that known schema, the tool
+rejects it rather than guessing its meaning.
+
+**Security boundary:** `APPROVED` on a relation means the stored
+label says approved, not that its authority or factual truth was verified.
+`semantic_mapping_reviewed=false`, `approval_authenticated=false`,
+`verified_fact=false`, and `allow_model_context=false` remain in
+the report; no truth promotion or model learning occurs. The
+`--llm-tmp-dir` argument must refer to a trusted local Python checkout
+because the interface intentionally loads its module for validation.
