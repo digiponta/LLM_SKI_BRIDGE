@@ -101,6 +101,16 @@ def validate_diagnostic(exchange):
         raise ValueError("MISSING_SKI_DIAGNOSTIC") from exc
     if not isinstance(diagnostic, dict):
         raise ValueError("INVALID_SKI_DIAGNOSTIC")
+    # Python compares 0 == False and 1 == True, so equality with the
+    # regenerated profile alone is not a strict wire type check.
+    for flag in ("verified_fact", "human_approved", "allow_model_context",
+                 "allow_answer_from_evidence", "allow_learning",
+                 "allow_truth_promotion"):
+        if type(diagnostic.get(flag)) is not bool or diagnostic[flag] is not False:
+            raise ValueError("UNSAFE_DIAGNOSTIC_FLAG")
+    hops = diagnostic.get("evidence_path_hops")
+    if hops is not None and (type(hops) is not int or hops < 0 or hops > MAX_EDGES):
+        raise ValueError("INVALID_DIAGNOSTIC_HOPS")
     expected = build_diagnostic(req, resp, a, b)
     if diagnostic != expected:
         raise ValueError("SKI_DIAGNOSTIC_MISMATCH")
