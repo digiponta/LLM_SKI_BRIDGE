@@ -1,0 +1,24 @@
+{
+  "namespace": "demo-local",
+  "snapshot_id": "intent-sd-native-demo-001",
+  "display_names": {
+    "CLAIM": "主張",
+    "EVIDENCE": "根拠",
+    "OTHER": "別話題"
+  },
+  "nodes": [
+    {"sd_id": "CLAIM", "node_type": "TOPIC"},
+    {"sd_id": "EVIDENCE", "node_type": "CONCEPT"},
+    {"sd_id": "OTHER", "node_type": "ENTITY"},
+    {"sd_id": "support-pred", "node_type": "PREDICATE", "continuity_allowed": true},
+    {"sd_id": "topic-pred", "node_type": "PREDICATE", "continuity_allowed": true},
+    {"sd_id": "relation-1", "node_type": "RELATION",
+      "predicate_ref": "support-pred", "source_ref": "CLAIM",
+      "target_ref": "EVIDENCE", "validation_state": "APPROVED",
+      "evidence_id": "EV-DEMO-001"},
+    {"sd_id": "relation-2", "node_type": "RELATION",
+      "predicate_ref": "topic-pred", "source_ref": "CLAIM",
+      "target_ref": "OTHER", "validation_state": "APPROVED",
+      "evidence_id": "EV-DEMO-002"}
+  ]
+}
