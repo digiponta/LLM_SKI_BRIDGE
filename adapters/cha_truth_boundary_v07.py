@@ -69,6 +69,11 @@ def assess_exchange(exchange):
     status = resp.get("status")
     if status not in _STATES:
         raise ValueError("UNKNOWN_STATUS")
+    # v0.14 optional extension: reject any tampered structured Dataset B
+    # diagnostic while accepting legacy v0.13 exchanges without it.
+    if "diagnostic" in b[0]:
+        from ski.diagnostic_v014 import validate_diagnostic
+        validate_diagnostic(exchange)
     # Crucially, the decision contains no source text or edge content.
     return {
         "action": "DIAGNOSTIC_ONLY",
