@@ -335,3 +335,60 @@ read-only exporter to this profile. Never reinterpret an unrelated
 approved relation registry. The v0.8 loader does not prove that imported
 APPROVED markers were issued by a trusted reviewer; the returned metadata
 contains `approval_authenticated=false` and `verified_fact=false`.
+
+
+## v0.9 — native LLM_TMP Intent SD v0.3 snapshot conversion
+
+Inspected actual LLM_TMP code on
+`feature/intent-sd-v0.3.2-proxy-approval`:
+`intent_sd_context_v03.py` defines `SDRegistry`, a frozen read-only
+JSON format with `namespace`, `snapshot_id`, `nodes[]` and optional
+GUI `display_names`. A RELATION SD node includes `predicate_ref`,
+`source_ref`, `target_ref`, `validation_state`, and `evidence_id`.
+This is a **context/topic relation graph**, not automatically a factual
+Evidence Graph. `linked_sd_annotation_v031.py` also consumes this format.
+
+`adapters/llm_tmp_native_v09.py` reads a native snapshot without
+modifying it, validates it using the **real trusted local SDRegistry
+implementation**, then converts it to the strictly validated v0.8
+snapshot profile.
+
+**Safety boundary:** By default **zero relations are exported**.
+A caller may explicitly allowlist a predicate SD ID that is intended
+to mean `SUPPORTED_BY`. Only relations with that exact predicate
+and `validation_state=APPROVED` are exported; PENDING/REJECTED and
+all other predicates are excluded. The converter makes no assertion
+that the allowed predicate really encodes evidence semantics: this
+requires separately reviewed mapping. It does not authenticate
+the approval, the evidence ID, or provenance.
+
+### Windows verification (synthetic native fixture)
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/native-sd-registry-v0.9
+git pull --ff-only
+python -m unittest discover -s tests -v
+
+# Default-deny: no relation mapping -> NOT_FOUND
+python verify_native_registry_v09.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP `
+  --native examples/llm_tmp_native_registry_v09.json
+
+# Explicit synthetic demonstration: mapping -> FOUND
+python verify_native_registry_v09.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP `
+  --native examples/llm_tmp_native_registry_v09.json `
+  --supported-by-predicate support-pred
+```
+
+Expected suite: 86 tests (74 existing + 12 new). The two integration
+runs should return NOT_FOUND and FOUND respectively, with
+`approval_authenticated=false` and `verified_fact=false`.
+These are expected outcomes, not claims of executed tests.
+
+For real local files, use the actual `SDRegistry` frozen JSON format;
+do not use a benchmark report or the v0.8 synthetic relation
+snapshot as native input. An explicitly approved predicate mapping
+is still a hypothesis to evaluate, not proof of factual truth.
