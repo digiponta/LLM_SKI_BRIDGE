@@ -122,6 +122,18 @@ class DiagnosticV014Tests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_diagnostic(e)
 
+    def test_integer_zero_cannot_impersonate_false(self):
+        e = exchange()
+        e["dataset_b"][0]["diagnostic"]["allow_learning"] = 0
+        with self.assertRaisesRegex(ValueError, "UNSAFE_DIAGNOSTIC_FLAG"):
+            validate_diagnostic(e)
+
+    def test_boolean_true_cannot_impersonate_one_hop(self):
+        e = exchange()
+        e["dataset_b"][0]["diagnostic"]["evidence_path_hops"] = True
+        with self.assertRaisesRegex(ValueError, "INVALID_DIAGNOSTIC_HOPS"):
+            validate_diagnostic(e)
+
     def test_legacy_dataset_b_without_extension_allowed(self):
         e = exchange()
         del e["dataset_b"][0]["diagnostic"]
