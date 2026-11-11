@@ -1,0 +1,32 @@
+{
+  "format": "ski-relation-snapshot-v0.8",
+  "snapshot_id": "synthetic-demo-001",
+  "source_system": "LLM_TMP",
+  "nodes": ["CLAIM", "EVIDENCE", "PENDING", "REJECTED"],
+  "relations": [
+    {
+      "source": "CLAIM",
+      "kind": "SUPPORTED_BY",
+      "target": "EVIDENCE",
+      "state": "APPROVED",
+      "evidence_id": "EV-DEMO-1",
+      "provenance": "synthetic-fixture-unverified"
+    },
+    {
+      "source": "CLAIM",
+      "kind": "SUPPORTED_BY",
+      "target": "PENDING",
+      "state": "PENDING",
+      "evidence_id": null,
+      "provenance": null
+    },
+    {
+      "source": "CLAIM",
+      "kind": "SUPPORTED_BY",
+      "target": "REJECTED",
+      "state": "REJECTED",
+      "evidence_id": null,
+      "provenance": null
+    }
+  ]
+}
