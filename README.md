@@ -167,3 +167,72 @@ loads existing semantic memory, or changes model/data files.
 **Upcoming v0.6:** integrate with a reviewed LLM_CHA runtime extension point,
 map actual local SD IDs, add provenance/authentication and replay protection,
 and measure end-to-end semantic quality independently of transport validity.
+
+
+## v0.6 — opt-in console with actual LLM_CHA/chat.py process
+
+`run_cha_ski_console_v06.py` launches the existing `LLM_CHA/chat.py`
+as a child process (Python unbuffered; its stdout remains visible). Ordinary
+user text is forwarded unchanged to that real process. A separate explicit
+`/ski SOURCE_SD TARGET_SD | question` command sends a read-only SKI
+evidence lookup to the real LLM_TMP RelationGraph class, using the
+`CHAClient` v0.5 sidecar. **/ski does not invoke the LLM or inject evidence
+into its context.** It prints a separate machine-readable diagnostic and
+never asserts the query result is factual truth.
+
+The real LLM_CHA model can run for ordinary chat *if the user has all local
+dependencies and model checkpoints installed*. The SKI graph may optionally
+come from a user-provided, trusted, local JSON file with `nodes` and
+`relations`. Such a file is loaded only into an ephemeral in-memory graph.
+No existing Semantic Registry is connected automatically; no files in
+LLM_CHA or LLM_TMP are rewritten.
+
+### Windows steps
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/llm-cha-console-v0.6
+git pull --ff-only
+python -m unittest discover -s tests -v
+
+# Only SKI diagnostics, without launching the LLM:
+python run_cha_ski_console_v06.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP `
+  --graph-file examples/ski_graph_v06.json `
+  --no-chat
+
+# To additionally launch the actual LLM_CHA/chat.py, remove --no-chat.
+```
+
+At the `CHA/SKI>` prompt:
+
+```text
+/ski CHA-CLAIM TMP-EVIDENCE | 根拠を確認してください
+/ski CHA-CLAIM TMP-PENDING | 根拠を確認してください
+/ski CHA-CLAIM MISSING | 根拠を確認してください
+量子力学とは
+/status
+/exit
+```
+
+Expected synthetic statuses are FOUND, NOT_FOUND and UNKNOWN_NODE
+respectively. `量子力学とは` and `/status` are sent to the actual chat
+process when started; `/exit` closes the console and child process.
+
+The demo JSON contains **synthetic, unauthenticated** approvals. The result
+remains `verified_fact: false`, even for FOUND. Do not expose this CLI
+on a network or treat arbitrary external JSON as verified evidence.
+
+### v0.6 boundaries
+
+- Actual `LLM_CHA/chat.py` is launched for ordinary user input, but is
+  not modified; the existing truth/unknown gates remain in control.
+- The explicit `/ski` query is a separate diagnostic, not automatic
+  chat-context resolution, semantic alignment or answer generation.
+- There is no model-generated response based on SKI evidence yet.
+- There is no source authentication, real persistent Replica Registry,
+  production network transport, or proof of semantic equivalence.
+- A future opt-in GUI or verified runtime-hook integration requires
+  dedicated testing and a review of the existing LLM_CHA truth policies.
