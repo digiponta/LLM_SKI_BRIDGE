@@ -630,3 +630,62 @@ the v0.13 cross-repo verifier still checks **14** scenarios.
 LLM_CHA separately fixed its `printer()` callback usage in all three
 diagnostic functions; the focused LLM_CHA test count stays **49**.
 Windows verification of this combined patch is pending.
+
+
+## v0.14 — SKI Diagnostic Response (structured Dataset B profile)
+
+Companion branches:
+- `digiponta/LLM_CHA:feature/ski-diagnostic-v0.14`
+- `digiponta/HASKI_DOC:feature/ski-diagnostic-response-v0.14`
+
+The project now places a structured `diagnostic` field *inside the
+actual SKI v0.5 Dataset B message* returned by `CHAClient.exchange`.
+This is an **optional compatible metadata profile**, not a revision of
+the official/normative SKI v0.5 wire format. It preserves Dataset A,
+Dataset B, ACK, and the separate experimental Evidence envelopes.
+
+The field includes request correlation IDs, status, bounded hop count,
+local truth/approval states and fail-closed policy flags. It does **not**
+include raw Evidence text or provenance. The SHA-256 is an integrity
+checksum, **not** cryptographic authentication. A positive graph path
+does not imply factual truth or human approval.
+
+`assess_exchange` validates the diagnostic when present, while
+continuing to accept legacy v0.13 Dataset B without the profile.
+The v0.14 LLM_CHA runtime **requires** a valid profiled Dataset B when
+configured to use this v0.14 Bridge; it never adds unverified Evidence
+to the model context, answer, truth records or training.
+
+### Windows validation
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_CHA
+git fetch origin
+git switch feature/ski-diagnostic-v0.14
+git pull --ff-only
+python -m unittest -v test_ski_runtime_v011.py test_ski_auto_route_v012.py test_ski_context_route_v013.py
+
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/ski-diagnostic-v0.14
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_ski_diagnostic_v014.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+python verify_cha_context_v013.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+Expected focused CHA tests: **49**; expected Bridge tests: **122**
+(previous 105 + 17 new); dedicated v0.14 three-repo validation has
+9 checks when `--llm-cha-dir` is specified. These are *not* yet
+Windows-verified results. The v0.13 14-check suite should continue to
+pass.
+
+With the environment flags from `LLM_CHA/SKI_CONTEXT_V013.md`, the
+running chat CLI should display `ski_profile=ski-diagnostic-v0.14`
+beside the ordinary `ski_context_status=FOUND` status for the
+synthetic two-turn reference. This marker means a structured SKI
+diagnostic was validated, not that retrieved content is true.
