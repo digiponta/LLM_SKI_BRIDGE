@@ -48,6 +48,20 @@ def check(module, env, turns, expectation):
 def verify(cha_dir, tmp_dir, bridge_dir, native):
     source = Path(native).resolve()
     before = digest(source)
+    # Build language fixtures from the actual native Registry labels.
+    # This prevents silent test drift when display_names changes.
+    from adapters.llm_tmp_native_v09 import read_native
+    snapshot, snapshot_sha = read_native(source)
+    if snapshot_sha != before:
+        raise ValueError("SNAPSHOT_CHANGED_DURING_VERIFICATION")
+    display_names = snapshot.get("display_names", {})
+    source_label = display_names.get("CLAIM")
+    other_label = display_names.get("OTHER")
+    if not all(isinstance(x, str) and x.strip() and x != sid
+               for sid, x in (("CLAIM", source_label), ("OTHER", other_label))):
+        raise ValueError("REQUIRED_TEST_DISPLAY_NAMES_MISSING")
+    if source_label == other_label:
+        raise ValueError("TEST_DISPLAY_NAMES_NOT_UNIQUE")
     module = get_context_module(cha_dir)
     env = {
         "LLM_CHA_SKI_ENABLED": "1",
@@ -71,10 +85,10 @@ def verify(cha_dir, tmp_dir, bridge_dir, native):
          ("主張について", "はい", "そう", "なるほど", "その根拠は？"),
          "PASS_THROUGH"),
         ("unmapped_topic",
-         ("主張について", "その他の話です", "その根拠は？"),
+         (f"{source_label}について", f"{other_label}の話です", "その根拠は？"),
          "PASS_THROUGH"),
         ("two_topics",
-         ("主張について", "主張とその他について", "その根拠は？"),
+         (f"{source_label}について", f"{source_label}と{other_label}について", "その根拠は？"),
          "PASS_THROUGH"),
         ("normal_chat",
          ("主張について", "こんにちは"), "PASS_THROUGH"),
