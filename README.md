@@ -613,3 +613,20 @@ a limited hardcoded topic/attribute vocabulary and is only a secondary
 fail-closed check; v0.13 does not implement universal pronoun resolution,
 model-grounded answers, real-source provenance authentication, or
 cross-host SKI transport.
+
+### Windows follow-up: synthetic display-name fixture mismatch
+
+The real sample `examples/llm_tmp_native_registry_v09.json` contains:
+`display_names.CLAIM="主張"`, `display_names.OTHER="別話題"`.
+The v0.13 integration verifier previously used `その他` for OTHER,
+so its `unmapped_topic` and `two_topics` checks never named the actual
+SECOND SD node. The corrected verifier reads display names from the
+native JSON file and requires nonempty, distinct labels. It uses those
+literal labels in the two test scenarios. Three new regression tests
+check successful label extraction and malformed/duplicate labels.
+
+After the change, the expected Bridge unit count is **105** (102+3);
+the v0.13 cross-repo verifier still checks **14** scenarios.
+LLM_CHA separately fixed its `printer()` callback usage in all three
+diagnostic functions; the focused LLM_CHA test count stays **49**.
+Windows verification of this combined patch is pending.
