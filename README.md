@@ -498,3 +498,40 @@ the actual running `chat.py`.
 
 **Verification status:** code committed; the user's local Windows
 regression and model-startup tests for v0.11 are not yet observed.
+
+
+## v0.12 — opt-in natural-language routing from the real LLM_CHA chat loop
+
+Companion LLM_CHA branch:
+`feature/ski-auto-router-v0.12`.
+The chat.py loop now also calls `ski_auto_route_v012.py` for normal
+Japanese user inputs when both `LLM_CHA_SKI_ENABLED=1` and
+`LLM_CHA_SKI_AUTO_ENABLED=1`.
+
+The router recognizes a narrow, literal form: a single native
+`display_names` value followed by a Japanese evidence-request ending.
+It requires exactly one approved relation target after explicit
+`LLM_CHA_SKI_PREDICATE` mapping, then uses the existing v0.11
+real SKI diagnostic path. Ambiguous, unrelated or disabled inputs
+pass through to ordinary chat without an SKI result.
+
+It is *not* semantic intent inference by the LLM and does not feed
+evidence into model prompts, verify factual truth, or learn.
+See `LLM_CHA/SKI_AUTO_ROUTE_V012.md` for setup.
+
+To validate with the real local LLM_TMP SDRegistry/RelationGraph
+implementations (using only the **synthetic** native fixture):
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/cha-auto-router-v0.12
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_cha_auto_route_v012.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+Expected: 98 existing Bridge tests and eight new runtime verification
+scenarios; these expectations are not yet Windows execution evidence.
