@@ -47,6 +47,11 @@ class CHAClient:
             assessments={"verified_fact": False, "human_approved": False,
                          "evidence_status": status})]
         validate_replies(dataset_a, dataset_b, allow_multiple=False)
+        # v0.14: the diagnostic is an explicit structured SKI Dataset B
+        # field, not merely a local display string. It is still unverified.
+        from ski.diagnostic_v014 import build_diagnostic
+        dataset_b[0]["diagnostic"] = build_diagnostic(
+            req, resp, dataset_a, dataset_b)
         return {
             "dataset_a": dataset_a,
             "ack": ack,
