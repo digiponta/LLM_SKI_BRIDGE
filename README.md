@@ -283,3 +283,55 @@ this is an expected count, **not a claim of execution**.
 Next: map LLM_CHA's actual truth classifications and the stored Registry
 to an explicitly reviewed, provenance-aware policy, under independent tests.
 Do not auto-feed a FOUND path or unreviewed external source to model context.
+
+
+## v0.8 — strict read-only LLM_TMP RelationGraph snapshot importer
+
+The public LLM_TMP branch `feature/intent-sd-v0.3.2-proxy-approval` exposes
+`semantic_relation_graph_v035.py` as an in-memory graph, while
+`benchmark_sd_registry_v034.py` uses a **synthetic benchmark-only**
+adjacency index. A stable persistent RelationGraph registry reader is not
+established in that code. Therefore this version **does not silently assume
+that an arbitrary LLM_TMP registry JSON is compatible**.
+
+`adapters/llm_tmp_registry_v08.py` defines a strict, explicitly versioned
+bridge **snapshot interchange profile**, `ski-relation-snapshot-v0.8`.
+The JSON has exactly: `format`, `snapshot_id`,
+`source_system=LLM_TMP`, `nodes[]` (local SD IDs), and
+`relations[]` (directed edge records). Relation fields are exactly
+`source`, `kind`, `target`, `state`, `evidence_id`, `provenance`.
+An APPROVED edge requires traceable nonempty `evidence_id` and
+`provenance`. This is **not authentication or proof of truth**.
+PENDING and REJECTED edges remain non-usable for approved evidence paths.
+
+The loader rejects duplicate JSON object keys, duplicate SD IDs, unknown
+endpoints, duplicate edges, unrecognized relation kinds/states, malformed
+or ambiguous metadata, and oversized files. The input file is only opened
+for reading and its raw SHA-256 is returned. The parsed graph is newly
+constructed in memory; no registry, model or training state is modified.
+
+### Windows validation
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/registry-import-v0.8
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_registry_import_v08.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP `
+  --snapshot examples/llm_tmp_snapshot_v08.json
+```
+
+Expected tests: 74 methods (previous 62 plus 12 new ones). The integration
+program checks APPROVED / PENDING / REJECTED / UNKNOWN through the real
+LLM_TMP graph class, the SKI v0.5 handoff and the v0.7 fail-closed boundary.
+The example contains deliberately synthetic, unauthenticated evidence.
+
+**Important:** To work with an actual saved LLM_TMP registry in a future
+version, first document its real schema and create an explicit, audited,
+read-only exporter to this profile. Never reinterpret an unrelated
+`linked_sd_registry_dev.json` or a synthetic benchmark report as an
+approved relation registry. The v0.8 loader does not prove that imported
+APPROVED markers were issued by a trusted reviewer; the returned metadata
+contains `approval_authenticated=false` and `verified_fact=false`.
