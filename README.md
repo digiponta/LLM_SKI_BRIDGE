@@ -453,3 +453,48 @@ label says approved, not that its authority or factual truth was verified.
 the report; no truth promotion or model learning occurs. The
 `--llm-tmp-dir` argument must refer to a trusted local Python checkout
 because the interface intentionally loads its module for validation.
+
+
+## v0.11 — direct in-process integration into LLM_CHA's real chat.py
+
+Companion branch in `digiponta/LLM_CHA`:
+`feature/ski-runtime-integration-v0.11`.
+Unlike the v0.6 detached console, this branch **adds an actual
+`/ski` dispatch hook to the LLM_CHA v0.14.0 `chat.py` input loop**.
+The hook consumes explicit SKI commands before any model, learning
+or semantic routes. Normal dialogue is not intercepted.
+
+The hook calls the v0.9 native registry converter, v0.5 CHAClient
+and v0.7 fail-closed Truth Boundary in this repository, plus
+LLM_TMP's actual trusted local SDRegistry/RelationGraph modules.
+The result is a separate evidence diagnostic, **not a model answer**
+and not proof of factual truth.
+
+To validate the **actual three-repository handoff**, check out the
+corresponding LLM_CHA branch and execute:
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/cha-runtime-contract-v0.11
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_cha_runtime_hook_v011.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+The verifier dynamically loads the actual LLM_CHA hook (without
+loading the trained `chat.py` model) and exercises:
+default-deny `NOT_FOUND`, explicit synthetic predicate mapping
+`FOUND`, missing Semantic ID `UNKNOWN_NODE`, disabled mode,
+normal-chat pass-through, and input file immutability. It uses the
+synthetic native sample already present in `examples/`, not the
+user's production Registry.
+
+See `LLM_CHA/SKI_RUNTIME_V011.md` on the companion branch for
+PowerShell environment variables and the commands that exercise
+the actual running `chat.py`.
+
+**Verification status:** code committed; the user's local Windows
+regression and model-startup tests for v0.11 are not yet observed.
