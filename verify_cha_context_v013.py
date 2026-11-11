@@ -45,6 +45,21 @@ def check(module, env, turns, expectation):
     return {"expected": expectation, "actual": actual, "pass": passed}
 
 
+def fixture_labels(snapshot):
+    """Return distinct display names for the two synthetic topic IDs."""
+    if not isinstance(snapshot, dict):
+        raise ValueError("INVALID_TEST_SNAPSHOT")
+    display_names = snapshot.get("display_names", {})
+    source_label = display_names.get("CLAIM") if isinstance(display_names, dict) else None
+    other_label = display_names.get("OTHER") if isinstance(display_names, dict) else None
+    if not all(isinstance(x, str) and x.strip() and x != sid
+               for sid, x in (("CLAIM", source_label), ("OTHER", other_label))):
+        raise ValueError("REQUIRED_TEST_DISPLAY_NAMES_MISSING")
+    if source_label == other_label:
+        raise ValueError("TEST_DISPLAY_NAMES_NOT_UNIQUE")
+    return source_label, other_label
+
+
 def verify(cha_dir, tmp_dir, bridge_dir, native):
     source = Path(native).resolve()
     before = digest(source)
@@ -54,14 +69,7 @@ def verify(cha_dir, tmp_dir, bridge_dir, native):
     snapshot, snapshot_sha = read_native(source)
     if snapshot_sha != before:
         raise ValueError("SNAPSHOT_CHANGED_DURING_VERIFICATION")
-    display_names = snapshot.get("display_names", {})
-    source_label = display_names.get("CLAIM")
-    other_label = display_names.get("OTHER")
-    if not all(isinstance(x, str) and x.strip() and x != sid
-               for sid, x in (("CLAIM", source_label), ("OTHER", other_label))):
-        raise ValueError("REQUIRED_TEST_DISPLAY_NAMES_MISSING")
-    if source_label == other_label:
-        raise ValueError("TEST_DISPLAY_NAMES_NOT_UNIQUE")
+    source_label, other_label = fixture_labels(snapshot)
     module = get_context_module(cha_dir)
     env = {
         "LLM_CHA_SKI_ENABLED": "1",
