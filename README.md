@@ -567,3 +567,49 @@ python verify_cha_auto_route_v012.py `
 Expected Bridge test count after fix: **100**. Run the cross-repository
 verifier again to confirm eight checked cases; those test results have
 not yet been observed after this fix.
+
+
+## v0.13 — real LLM_CHA multi-turn Semantic Context → SKI diagnostic
+
+Companion `LLM_CHA` branch:
+`feature/ski-context-v0.13`. The actual LLM_CHA `chat.py` now
+maintains a separate session-local source SD pointer for *bounded*
+context references such as `その根拠は？`. It stores no third-party
+evidence in the prompt and never trains or promotes truth from SKI.
+
+The source SD is selected only from an **explicit and unique** native
+Registry display name having exactly one approved, explicitly mapped
+`SUPPORTED_BY` target. The valid reference window is at most two
+subsequent user turns; ambiguous competing topics and the `/reset`
+command erase it. The real local LLM_TMP `context_intent_resolver_v033.py`
+is used for a limited **multi-topic/attribute ambiguity veto**,
+not to infer a generalized factual Evidence relation.
+
+### Windows verification
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_CHA
+git fetch origin
+git switch feature/ski-context-v0.13
+git pull --ff-only
+python -m unittest -v test_ski_runtime_v011.py test_ski_auto_route_v012.py test_ski_context_route_v013.py
+
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/cha-context-v0.13
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_cha_context_v013.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+Expected: LLM_CHA **46 focused tests**; SKI Bridge **102 tests**
+(previous 100 plus 2 new); integration **14 scenarios**. These are
+expected counts, not execution results.
+
+The sample is synthetic. The actual v0.33 Context Intent Resolver has
+a limited hardcoded topic/attribute vocabulary and is only a secondary
+fail-closed check; v0.13 does not implement universal pronoun resolution,
+model-grounded answers, real-source provenance authentication, or
+cross-host SKI transport.
