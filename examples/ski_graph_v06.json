@@ -1,0 +1,29 @@
+{
+  "nodes": ["CHA-CLAIM", "TMP-EVIDENCE", "TMP-PENDING", "TMP-REJECTED"],
+  "relations": [
+    {
+      "source": "CHA-CLAIM",
+      "kind": "SUPPORTED_BY",
+      "target": "TMP-EVIDENCE",
+      "state": "APPROVED",
+      "evidence_id": "EV-DEMO-1",
+      "provenance": "synthetic_fixture_not_verified"
+    },
+    {
+      "source": "CHA-CLAIM",
+      "kind": "SUPPORTED_BY",
+      "target": "TMP-PENDING",
+      "state": "PENDING",
+      "evidence_id": "EV-DEMO-2",
+      "provenance": "synthetic_fixture_not_verified"
+    },
+    {
+      "source": "CHA-CLAIM",
+      "kind": "SUPPORTED_BY",
+      "target": "TMP-REJECTED",
+      "state": "REJECTED",
+      "evidence_id": "EV-DEMO-3",
+      "provenance": "synthetic_fixture_not_verified"
+    }
+  ]
+}
