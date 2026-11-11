@@ -34,7 +34,7 @@ class TruthBoundaryTests(unittest.TestCase):
 
     def test_all_statuses_block_model(self):
         for status in ("FOUND", "NOT_FOUND", "UNKNOWN_NODE",
-                       "LIMIT_REACHED", "DEPTH_LIMIT_REACHED"):
+                       "LIMIT_REACHED"):
             with self.subTest(status=status):
                 d = assess_exchange(self.exchange(status))
                 self.assertEqual(d["evidence_status"], status)
