@@ -106,7 +106,7 @@ def audit_native(data, Registry, *, supported_by_predicates=()):
             "allow_learning": False,
         },
         "source_modified": False,
-        "caution": "Structural analysis only; APPPROVED flags and Evidence IDs do not prove factual truth or reviewer authority.",
+        "caution": "Structural analysis only; APPROVED flags and Evidence IDs do not prove factual truth or reviewer authority.",
     }
 
 
