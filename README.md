@@ -535,3 +535,35 @@ python verify_cha_auto_route_v012.py `
 
 Expected: 98 existing Bridge tests and eight new runtime verification
 scenarios; these expectations are not yet Windows execution evidence.
+
+
+### v0.12 integration verifier import-path fix
+
+After the first v0.12 Windows evaluation the Bridge suite passed (98/98)
+and the **actual** LLM_CHA `python chat.py` automatic query returned FOUND.
+However `verify_cha_auto_route_v012.py` reported ERROR on matching
+phrases because it dynamically loaded `ski_auto_route_v012.py` from
+another directory without registering the companion LLM_CHA path.
+The auto-router's lazy `import ski_runtime_v011` therefore failed in
+that verifier process. This is a **harness import-path issue**, not
+evidence that `chat.py` failed in the observed live run.
+
+The verifier now registers its explicitly supplied, trusted local
+`--llm-cha-dir` before loading the hook. Added 2 unit regressions in
+`tests/test_cha_auto_import_v012.py`.
+
+Re-check in Windows:
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git switch feature/cha-auto-router-v0.12
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_cha_auto_route_v012.py `
+  --llm-cha-dir C:\Users\inoma\git\misc\LLM_CHA `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+Expected Bridge test count after fix: **100**. Run the cross-repository
+verifier again to confirm eight checked cases; those test results have
+not yet been observed after this fix.
