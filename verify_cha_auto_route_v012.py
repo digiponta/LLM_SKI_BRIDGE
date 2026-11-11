@@ -7,13 +7,22 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 
 def get_cha_router(cha_dir):
-    path = Path(cha_dir).resolve() / "ski_auto_route_v012.py"
-    if not path.is_file():
+    root = Path(cha_dir).resolve()
+    path = root / "ski_auto_route_v012.py"
+    if not path.is_file() or not (root / "ski_runtime_v011.py").is_file():
         raise FileNotFoundError("LLM_CHA_AUTO_ROUTE_NOT_FOUND")
+    # When dynamically importing from the BRIDGE checkout, spec_from_file_location
+    # does not put the companion LLM_CHA directory on sys.path. Unlike
+    # 'python chat.py', the lazy 'from ski_runtime_v011 import ...' otherwise
+    # raises ModuleNotFoundError and auto_route returns its fail-closed ERROR.
+    # Only use the explicitly supplied, trusted local checkout directory.
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
     spec = importlib.util.spec_from_file_location("llm_cha_auto_v012", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
