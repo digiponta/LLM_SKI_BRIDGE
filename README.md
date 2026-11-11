@@ -236,3 +236,50 @@ on a network or treat arbitrary external JSON as verified evidence.
   production network transport, or proof of semantic equivalence.
 - A future opt-in GUI or verified runtime-hook integration requires
   dedicated testing and a review of the existing LLM_CHA truth policies.
+
+
+## v0.7 — SKI evidence / LLM_CHA truth-boundary isolation
+
+`adapters/cha_truth_boundary_v07.py` adds a fail-closed,
+**read-only protocol boundary** to check the full v0.5 `CHAClient.exchange()`
+result before any consumer considers using it.
+
+The boundary verifies:
+- Dataset A/B message directions, nonempty arrays, and SHA-256 digests;
+- ACK receipt hash and IDs, answer correlation and local-SD lineage;
+- experimental evidence-envelope pairing and approved contiguous path;
+- cross-protocol source/target SD IDs;
+- that verification and response assessments explicitly remain unverified.
+
+Every valid evidence outcome—including FOUND—returns:
+`action=DIAGNOSTIC_ONLY`, `truth_state=UNVERIFIED`, and
+`allow_model_context=false`, `allow_answer_from_evidence=false`,
+`allow_learning=false`, `allow_truth_promotion=false`.
+The decision never exposes user-provided text or untrusted edge descriptions.
+
+**This boundary is not the existing internal LLM_CHA Truth Gate** and does not
+patch `chat.py` or `chat_gui.py`. It prevents unauthorized promotion; it
+does not yet implement the separate verified-input policy needed for prompt
+injection/answer generation. Arbitrary `APPROVED` attributes supplied through
+local graph JSON remain unauthenticated and do not confer authority.
+
+### Windows v0.7 validation
+
+```powershell
+cd C:\Users\inoma\git\misc\LLM_SKI_BRIDGE
+git fetch origin
+git switch feature/evidence-truth-boundary-v0.7
+git pull --ff-only
+python -m unittest discover -s tests -v
+python verify_truth_boundary_v07.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+python verify_cha_handoff_v05.py `
+  --llm-tmp-dir C:\Users\inoma\git\misc\LLM_TMP
+```
+
+The target suite contains 62 test methods (previous 50 plus 12 v0.7 cases);
+this is an expected count, **not a claim of execution**.
+
+Next: map LLM_CHA's actual truth classifications and the stored Registry
+to an explicitly reviewed, provenance-aware policy, under independent tests.
+Do not auto-feed a FOUND path or unreviewed external source to model context.
